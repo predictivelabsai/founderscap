@@ -298,7 +298,7 @@ def _llm_classify(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://founderscap.eu",
+                "HTTP-Referer": "https://founderscap.co.uk",
                 "X-Title": "Founders Capital News Filter",
             },
             json=payload,
