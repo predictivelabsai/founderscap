@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Mentastic">
+  <rect width="64" height="64" rx="14" fill="#4338CA"/>
+  <circle cx="32" cy="28" r="12" fill="none" stroke="#C7D2FE" stroke-width="2"/>
+  <circle cx="28" cy="26" r="1.6" fill="#E0E7FF"/>
+  <circle cx="36" cy="26" r="1.6" fill="#E0E7FF"/>
+  <path d="M26 32 Q32 36 38 32" stroke="#C7D2FE" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M18 46 Q22 40 28 42 Q32 48 38 42 Q44 40 48 46" stroke="#A5B4FC" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <text x="32" y="60" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="7" fill="#F5F5F7" letter-spacing="2">MC</text>
+</svg>

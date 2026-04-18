@@ -1,0 +1,93 @@
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  background: #F3ECDD;
+  color: #2A2722;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  overflow-x: hidden;
+}
+
+/* Three.js hero canvas container */
+#three-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+#three-hero canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Signal tabs */
+.signal-tab {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #5C5446;
+  border-radius: 9999px;
+  border: 1px solid #D8CDB3;
+  background: transparent;
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+.signal-tab:hover {
+  color: #2A2722;
+  border-color: #8A6F3B;
+}
+.signal-tab-active {
+  color: #FFF8E8;
+  background: #8A6F3B;
+  border-color: #8A6F3B;
+}
+
+/* Plotly chart container */
+.chart-frame {
+  border: 1px solid #D8CDB3;
+  border-radius: 1rem;
+  background: #FAF5E7;
+  padding: 0.75rem;
+  min-height: 360px;
+}
+.chart-frame .plotly-graph-div {
+  width: 100% !important;
+  min-height: 340px;
+}
+
+/* Scroll reveal */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #F3ECDD; }
+::-webkit-scrollbar-thumb { background: #D8CDB3; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #8A6F3B; }
+
+/* Selection */
+::selection {
+  background: #8A6F3B;
+  color: #FFF8E8;
+}
+
+/* Small-screen polish */
+@media (max-width: 640px) {
+  .chart-frame { min-height: 300px; padding: 0.5rem; }
+  .chart-frame .plotly-graph-div { min-height: 280px; }
+}
+
+/* Reduce flash of unstyled Tailwind CDN load */
+body { min-height: 100vh; }

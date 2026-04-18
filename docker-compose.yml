@@ -1,0 +1,31 @@
+services:
+  founderscap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: founderscap:latest
+    restart: unless-stopped
+    environment:
+      # Coolify binds the domain when this variable is present and maps the
+      # internal port after the colon. Set SERVICE_FQDN_FOUNDERSCAP in the
+      # Coolify project UI (or it is auto-generated) — the value below is a
+      # default for local docker-compose runs.
+      - SERVICE_FQDN_FOUNDERSCAP=https://founderscap.co.uk:5001
+      - PORT=5001
+      # Optional: OpenRouter API key enables LLM-based relevance filtering
+      # in content/news.py. Without it, the site keyword-filters and serves
+      # items fail-open.
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - NEWS_FILTER_MODEL=${NEWS_FILTER_MODEL:-anthropic/claude-haiku-4-5}
+    expose:
+      - "5001"
+    # ports: is intentionally omitted in production — Coolify's proxy
+    # (Traefik/Caddy) handles inbound routing. Uncomment for local runs.
+    # ports:
+    #   - "5001:5001"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

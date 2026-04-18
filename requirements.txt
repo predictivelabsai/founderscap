@@ -1,0 +1,5 @@
+python-fasthtml
+uvicorn
+feedparser
+httpx
+python-dotenv

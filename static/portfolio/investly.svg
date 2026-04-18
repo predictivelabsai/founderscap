@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Investly">
+  <rect width="64" height="64" rx="14" fill="#0F172A"/>
+  <polyline points="14,46 24,34 34,40 50,20" stroke="#38BDF8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="32" y="58" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="10" fill="#F5F5F7" letter-spacing="2">INV</text>
+</svg>

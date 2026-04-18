@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="EstateGuru">
+  <rect width="64" height="64" rx="14" fill="#166534"/>
+  <path d="M16 38 L32 22 L48 38 V46 H16 Z" fill="#BBF7D0" opacity="0.35"/>
+  <text x="32" y="42" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="22" fill="#F5F5F7" letter-spacing="-1">eg</text>
+</svg>
