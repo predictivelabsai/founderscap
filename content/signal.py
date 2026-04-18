@@ -172,7 +172,6 @@ def defense_charts():
     rows = _read("defense_tech.csv")
     years = [r["year"] for r in rows]
     capital = [float(r["capital_usd_bn"]) for r in rows]
-    deals = [int(r["deals"]) for r in rows]
 
     line = {
         "data": [
@@ -195,23 +194,40 @@ def defense_charts():
         },
     }
 
-    deals_bar = {
+    nato_rows = sorted(_read("nato_spend.csv"),
+                       key=lambda r: float(r["spend_usd_bn"]), reverse=True)[:12]
+    countries = [r["country"] for r in nato_rows]
+    spend = [float(r["spend_usd_bn"]) for r in nato_rows]
+    gdp_share = [float(r["gdp_share_pct"]) for r in nato_rows]
+
+    nato_chart = {
         "data": [
             {
                 "type": "bar",
-                "x": years,
-                "y": deals,
-                "marker": {"color": OCHRE, "line": {"color": OCHRE_DEEP, "width": 1}},
-                "hovertemplate": "<b>%{x}</b><br>Deals: %{y}<extra></extra>",
+                "x": countries,
+                "y": spend,
+                "marker": {
+                    "color": gdp_share,
+                    "colorscale": OCHRE_SCALE,
+                    "cmin": 1.2,
+                    "cmax": 4.2,
+                    "showscale": True,
+                    "colorbar": {
+                        "title": {"text": "% GDP", "font": {"color": "#5C5446"}},
+                        "tickfont": {"color": "#5C5446"},
+                    },
+                    "line": {"color": "#FAF5E7", "width": 1},
+                },
+                "hovertemplate": "<b>%{x}</b><br>Spend: $%{y:.1f}B<br>%GDP: %{marker.color:.2f}%<extra></extra>",
             }
         ],
         "layout": {
-            **_layout("European defense-tech deal count"),
-            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "Year"}},
-            "yaxis": {**TEMPLATE["yaxis"], "title": {"text": "Deals"}},
+            **_layout("European NATO defence spend 2024 · USD bn (shade = % GDP)"),
+            "xaxis": {**TEMPLATE["xaxis"], "tickangle": -35},
+            "yaxis": {**TEMPLATE["yaxis"], "title": {"text": "USD bn"}},
         },
     }
-    return line, deals_bar
+    return line, nato_chart
 
 
 # ---------- Cleantech investment by subsector ----------
@@ -351,11 +367,11 @@ def all_charts():
         },
         "defense": {
             "title": "Defense-tech",
-            "eyebrow": "Dealroom · NATO DIANA",
-            "summary": "European defense-tech venture funding, 2019–2025. Five years of a new category forming — the explicit re-armament decade now flowing into venture.",
+            "eyebrow": "Dealroom · NATO",
+            "summary": "European defense-tech venture funding 2019–2025 alongside NATO defence expenditure. Venture dollars are accelerating off a small base; the underlying procurement budget is an order of magnitude larger and growing.",
             "source": {
-                "label": "Dealroom defence + security · NATO DIANA",
-                "url": "https://dealroom.co/guides/defence",
+                "label": "Dealroom defence + security · NATO Defence Expenditure release",
+                "url": "https://www.nato.int/cps/en/natohq/topics_49198.htm",
             },
             "primary": def_a,
             "secondary": def_b,
