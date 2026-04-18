@@ -1,7 +1,7 @@
 """
 Loads the five public-data CSVs in content/data/ and builds Plotly trace
-dictionaries for the Signal page. Dark theme, teal accent, all configured
-server-side so the client just renders what we hand it.
+dictionaries for the Signal page. Beige theme, ochre accent; charts picked
+to communicate quickly (no decorative treemaps).
 """
 
 import csv
@@ -19,13 +19,23 @@ TEMPLATE = {
     "yaxis": {"gridcolor": "#E1D7BC", "linecolor": "#D8CDB3", "zerolinecolor": "#D8CDB3"},
 }
 
-TEAL = "#8A6F3B"
-TEAL_SCALE = [
+OCHRE = "#8A6F3B"
+OCHRE_DEEP = "#5A4624"
+OCHRE_LIGHT = "#BBA97E"
+
+OCHRE_SCALE = [
     [0.0, "#F3ECDD"],
     [0.25, "#E9DFC3"],
     [0.55, "#BBA97E"],
     [0.8, "#8A6F3B"],
     [1.0, "#5A4624"],
+]
+
+# Palette cycle for donut/pie slices — beige-to-brown ordered.
+SLICE_COLORS = [
+    "#5A4624", "#8A6F3B", "#A38552", "#BBA97E",
+    "#D6C79E", "#E9DFC3", "#C9B58A", "#9A7F4A",
+    "#75553A", "#4F3C24", "#332311",
 ]
 
 
@@ -35,269 +45,355 @@ def _read(name):
 
 
 def _layout(title):
-    return {**TEMPLATE, "title": {"text": title, "font": {"color": "#2A2722", "size": 15}, "x": 0.02}}
-
-
-def nhs_charts():
-    rows = _read("nhs_rtt.csv")
-    specialties = [r["specialty"] for r in rows]
-    waiting = [int(r["waiting_list"]) for r in rows]
-    over_52 = [int(r["over_18_weeks"]) for r in rows]
-    median = [float(r["median_weeks"]) for r in rows]
-
-    treemap = {
-        "data": [
-            {
-                "type": "treemap",
-                "labels": specialties,
-                "parents": [""] * len(specialties),
-                "values": waiting,
-                "textinfo": "label+value",
-                "marker": {
-                    "colors": median,
-                    "colorscale": TEAL_SCALE,
-                    "showscale": True,
-                    "colorbar": {"title": "Median weeks", "tickfont": {"color": "#9CA3AF"}},
-                    "line": {"color": "#0A0B0D", "width": 1},
-                },
-                "hovertemplate": "<b>%{label}</b><br>Waiting list: %{value:,.0f}<br>Median weeks: %{color:.1f}<extra></extra>",
-            }
-        ],
-        "layout": _layout("NHS England waiting list by specialty"),
+    return {
+        **TEMPLATE,
+        "title": {"text": title, "font": {"color": "#2A2722", "size": 15}, "x": 0.02},
     }
 
-    heatmap = {
-        "data": [
-            {
-                "type": "bar",
-                "x": specialties,
-                "y": over_52,
-                "marker": {"color": TEAL},
-                "hovertemplate": "<b>%{x}</b><br>Waits > 18 weeks: %{y:,.0f}<extra></extra>",
-            }
-        ],
-        "layout": _layout("Patients waiting over 18 weeks, by specialty"),
-    }
-    return treemap, heatmap
 
+# ---------- European VC by country ----------
 
-def dfe_charts():
-    rows = _read("dfe_ks4.csv")
-    regions = [r["region"] for r in rows]
-    groups = ["all_pupils_a8", "fsm_a8", "non_fsm_a8"]
-    group_labels = ["All pupils", "FSM eligible", "Non-FSM"]
-    z = [[float(r[g]) for r in rows] for g in groups]
-
-    heatmap = {
-        "data": [
-            {
-                "type": "heatmap",
-                "x": regions,
-                "y": group_labels,
-                "z": z,
-                "colorscale": TEAL_SCALE,
-                "hovertemplate": "<b>%{x}</b> — %{y}<br>Attainment 8: %{z:.1f}<extra></extra>",
-                "colorbar": {"title": "A8", "tickfont": {"color": "#9CA3AF"}},
-            }
-        ],
-        "layout": _layout("Key Stage 4 Attainment 8 by region and FSM status"),
-    }
-
-    gap = {
-        "data": [
-            {
-                "type": "bar",
-                "x": regions,
-                "y": [float(r["disadvantage_gap"]) for r in rows],
-                "marker": {"color": TEAL},
-                "hovertemplate": "<b>%{x}</b><br>Disadvantage gap: %{y:.1f}<extra></extra>",
-            }
-        ],
-        "layout": _layout("Disadvantage gap in Attainment 8, by region"),
-    }
-    return heatmap, gap
-
-
-def nato_charts():
-    rows = _read("nato_spend.csv")
-    # Exclude US to keep focus on European NATO members per the European pitch
-    rows = [r for r in rows if r["country"] != "United States"]
+def european_vc_charts():
+    rows = _read("european_vc.csv")
+    rows = sorted(rows, key=lambda r: float(r["capital_usd_bn"]))
     countries = [r["country"] for r in rows]
-    spend = [float(r["spend_usd_bn"]) for r in rows]
-    gdp = [float(r["gdp_share_pct"]) for r in rows]
+    capital = [float(r["capital_usd_bn"]) for r in rows]
+    deals = [int(r["deals"]) for r in rows]
 
-    treemap = {
+    # Horizontal bar of capital deployed per country
+    bars = {
         "data": [
             {
-                "type": "treemap",
-                "labels": countries,
-                "parents": [""] * len(countries),
-                "values": spend,
-                "textinfo": "label+value",
+                "type": "bar",
+                "orientation": "h",
+                "x": capital,
+                "y": countries,
                 "marker": {
-                    "colors": gdp,
-                    "colorscale": TEAL_SCALE,
-                    "showscale": True,
-                    "colorbar": {"title": "% GDP", "tickfont": {"color": "#9CA3AF"}},
-                    "line": {"color": "#0A0B0D", "width": 1},
+                    "color": capital,
+                    "colorscale": OCHRE_SCALE,
+                    "line": {"color": "#FAF5E7", "width": 1},
                 },
-                "hovertemplate": "<b>%{label}</b><br>Spend: $%{value:.1f}B<br>%GDP: %{color:.2f}%<extra></extra>",
+                "hovertemplate": "<b>%{y}</b><br>Capital deployed: $%{x:.1f}B<extra></extra>",
             }
         ],
-        "layout": _layout("European NATO defence spend (USD bn) · shade = % GDP"),
+        "layout": {
+            **_layout("VC capital deployed by country (2024, USD bn)"),
+            "margin": {"l": 130, "r": 20, "t": 40, "b": 40},
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "USD bn"}},
+        },
     }
 
+    # Scatter: capital vs deal count
     scatter = {
         "data": [
             {
-                "type": "bar",
-                "x": countries,
-                "y": gdp,
-                "marker": {"color": [TEAL if g >= 2.0 else "#1E3A3A" for g in gdp]},
-                "hovertemplate": "<b>%{x}</b><br>%GDP: %{y:.2f}%<extra></extra>",
+                "type": "scatter",
+                "mode": "markers+text",
+                "x": deals,
+                "y": capital,
+                "text": countries,
+                "textposition": "top center",
+                "textfont": {"size": 10, "color": "#5C5446"},
+                "marker": {
+                    "size": [max(10, c * 2.5) for c in capital],
+                    "color": OCHRE,
+                    "opacity": 0.75,
+                    "line": {"color": OCHRE_DEEP, "width": 1},
+                },
+                "hovertemplate": "<b>%{text}</b><br>%{x} deals · $%{y:.1f}B<extra></extra>",
             }
         ],
-        "layout": {**_layout("Defence spend as % of GDP (NATO 2% target)"), "shapes": [{
-            "type": "line", "x0": -0.5, "x1": len(countries) - 0.5, "y0": 2.0, "y1": 2.0,
-            "line": {"color": TEAL, "dash": "dash", "width": 1},
-        }]},
+        "layout": {
+            **_layout("Capital vs deal count"),
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "Deals (2024)"}},
+            "yaxis": {**TEMPLATE["yaxis"], "title": {"text": "USD bn"}},
+            "showlegend": False,
+        },
     }
-    return treemap, scatter
+    return bars, scatter
 
 
-def energy_charts():
-    rows = _read("energy_mix.csv")
-    countries = [r["country"] for r in rows]
-    sources = ["gas", "nuclear", "wind", "solar", "hydro", "biomass", "coal", "other"]
-    z = [[float(r[s]) for r in rows] for s in sources]
+# ---------- European VC by sector ----------
 
-    heatmap = {
+def sector_charts():
+    rows = _read("vc_by_sector.csv")
+    sectors = [r["sector"] for r in rows]
+    capital = [float(r["capital_usd_bn"]) for r in rows]
+    shares = [float(r["share_pct"]) for r in rows]
+
+    donut = {
         "data": [
             {
-                "type": "heatmap",
-                "x": countries,
-                "y": [s.capitalize() for s in sources],
-                "z": z,
-                "colorscale": TEAL_SCALE,
-                "hovertemplate": "<b>%{x}</b> — %{y}<br>%{z:.1f}% of generation<extra></extra>",
-                "colorbar": {"title": "% mix", "tickfont": {"color": "#9CA3AF"}},
+                "type": "pie",
+                "labels": sectors,
+                "values": capital,
+                "hole": 0.55,
+                "marker": {"colors": SLICE_COLORS[: len(sectors)]},
+                "textinfo": "label+percent",
+                "textfont": {"color": "#FFF8E8", "size": 11},
+                "hovertemplate": "<b>%{label}</b><br>$%{value:.1f}B · %{percent}<extra></extra>",
             }
         ],
-        "layout": _layout("European electricity generation mix (% by source)"),
+        "layout": {
+            **_layout("European VC capital by sector (2024)"),
+            "showlegend": False,
+        },
     }
 
-    renew = {
+    # Horizontal bar of sector share — easier comparison than slices
+    pairs = sorted(zip(sectors, shares), key=lambda x: x[1])
+    bars = {
         "data": [
             {
                 "type": "bar",
-                "x": countries,
-                "y": [float(r["wind"]) + float(r["solar"]) + float(r["hydro"]) for r in rows],
-                "marker": {"color": TEAL},
-                "hovertemplate": "<b>%{x}</b><br>Renewable (wind+solar+hydro): %{y:.1f}%<extra></extra>",
+                "orientation": "h",
+                "x": [s for _, s in pairs],
+                "y": [s for s, _ in pairs],
+                "marker": {
+                    "color": [s for _, s in pairs],
+                    "colorscale": OCHRE_SCALE,
+                    "line": {"color": "#FAF5E7", "width": 1},
+                },
+                "hovertemplate": "<b>%{y}</b><br>%{x:.1f}% of 2024 European VC<extra></extra>",
             }
         ],
-        "layout": _layout("Share of renewables (wind + solar + hydro) by country"),
+        "layout": {
+            **_layout("Sector share of European VC (2024, %)"),
+            "margin": {"l": 200, "r": 20, "t": 40, "b": 40},
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "% of total"}},
+        },
     }
-    return heatmap, renew
+    return donut, bars
 
+
+# ---------- Defense-tech funding trend ----------
+
+def defense_charts():
+    rows = _read("defense_tech.csv")
+    years = [r["year"] for r in rows]
+    capital = [float(r["capital_usd_bn"]) for r in rows]
+    deals = [int(r["deals"]) for r in rows]
+
+    line = {
+        "data": [
+            {
+                "type": "scatter",
+                "mode": "lines+markers",
+                "x": years,
+                "y": capital,
+                "line": {"color": OCHRE_DEEP, "width": 3, "shape": "spline"},
+                "marker": {"color": OCHRE, "size": 10, "line": {"color": "#FFF8E8", "width": 2}},
+                "fill": "tozeroy",
+                "fillcolor": "rgba(138,111,59,0.18)",
+                "hovertemplate": "<b>%{x}</b><br>Funding: $%{y:.1f}B<extra></extra>",
+            }
+        ],
+        "layout": {
+            **_layout("European defense-tech venture funding (USD bn)"),
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "Year"}},
+            "yaxis": {**TEMPLATE["yaxis"], "title": {"text": "USD bn"}},
+        },
+    }
+
+    deals_bar = {
+        "data": [
+            {
+                "type": "bar",
+                "x": years,
+                "y": deals,
+                "marker": {"color": OCHRE, "line": {"color": OCHRE_DEEP, "width": 1}},
+                "hovertemplate": "<b>%{x}</b><br>Deals: %{y}<extra></extra>",
+            }
+        ],
+        "layout": {
+            **_layout("European defense-tech deal count"),
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "Year"}},
+            "yaxis": {**TEMPLATE["yaxis"], "title": {"text": "Deals"}},
+        },
+    }
+    return line, deals_bar
+
+
+# ---------- Cleantech investment by subsector ----------
+
+def cleantech_charts():
+    rows = _read("cleantech_vc.csv")
+    rows = sorted(rows, key=lambda r: float(r["capital_usd_bn"]))
+    subs = [r["subsector"] for r in rows]
+    capital = [float(r["capital_usd_bn"]) for r in rows]
+    deals = [int(r["deals"]) for r in rows]
+
+    bars = {
+        "data": [
+            {
+                "type": "bar",
+                "orientation": "h",
+                "x": capital,
+                "y": subs,
+                "marker": {
+                    "color": capital,
+                    "colorscale": OCHRE_SCALE,
+                    "line": {"color": "#FAF5E7", "width": 1},
+                },
+                "hovertemplate": "<b>%{y}</b><br>$%{x:.1f}B<extra></extra>",
+            }
+        ],
+        "layout": {
+            **_layout("European cleantech VC by subsector (2024, USD bn)"),
+            "margin": {"l": 200, "r": 20, "t": 40, "b": 40},
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "USD bn"}},
+        },
+    }
+
+    deals_bar = {
+        "data": [
+            {
+                "type": "bar",
+                "x": subs,
+                "y": deals,
+                "marker": {"color": OCHRE, "line": {"color": OCHRE_DEEP, "width": 1}},
+                "hovertemplate": "<b>%{x}</b><br>Deals: %{y}<extra></extra>",
+            }
+        ],
+        "layout": {
+            **_layout("Deal count by cleantech subsector"),
+            "xaxis": {**TEMPLATE["xaxis"], "tickangle": -35},
+            "yaxis": {**TEMPLATE["yaxis"], "title": {"text": "Deals"}},
+        },
+    }
+    return bars, deals_bar
+
+
+# ---------- Global AI private investment ----------
 
 def ai_charts():
-    rows = _read("ai_adoption.csv")
+    rows = _read("ai_investment.csv")
+    rows = sorted(rows, key=lambda r: float(r["private_ai_investment_usd_bn"]))
     countries = [r["country"] for r in rows]
-    sectors = ["health", "defense", "education", "public_management", "energy"]
-    sector_labels = ["Health", "Defense", "Education", "Public mgmt", "Energy"]
-    z = [[float(r[s]) for r in rows] for s in sectors]
+    capital = [float(r["private_ai_investment_usd_bn"]) for r in rows]
 
-    heatmap = {
+    bars = {
         "data": [
             {
-                "type": "heatmap",
-                "x": countries,
-                "y": sector_labels,
-                "z": z,
-                "colorscale": TEAL_SCALE,
-                "hovertemplate": "<b>%{x}</b> — %{y}<br>Readiness index: %{z}<extra></extra>",
-                "colorbar": {"title": "Index", "tickfont": {"color": "#9CA3AF"}},
-                "zmin": 30,
-                "zmax": 85,
-            }
-        ],
-        "layout": _layout("Public-sector AI readiness · country × sector (composite 0–100)"),
-    }
-
-    by_sector = {}
-    for s, label in zip(sectors, sector_labels):
-        by_sector[label] = sum(float(r[s]) for r in rows) / len(rows)
-    treemap = {
-        "data": [
-            {
-                "type": "treemap",
-                "labels": list(by_sector),
-                "parents": [""] * len(by_sector),
-                "values": list(by_sector.values()),
-                "textinfo": "label+value",
+                "type": "bar",
+                "orientation": "h",
+                "x": capital,
+                "y": countries,
                 "marker": {
-                    "colors": list(by_sector.values()),
-                    "colorscale": TEAL_SCALE,
-                    "showscale": False,
-                    "line": {"color": "#0A0B0D", "width": 1},
+                    "color": capital,
+                    "colorscale": OCHRE_SCALE,
+                    "line": {"color": "#FAF5E7", "width": 1},
                 },
-                "hovertemplate": "<b>%{label}</b><br>Average readiness: %{value:.1f}<extra></extra>",
+                "hovertemplate": "<b>%{y}</b><br>$%{x:.1f}B<extra></extra>",
             }
         ],
-        "layout": _layout("Average public-sector AI readiness by target sector"),
+        "layout": {
+            **_layout("Private AI investment by country (2024, USD bn)"),
+            "margin": {"l": 150, "r": 20, "t": 40, "b": 40},
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "USD bn"}},
+        },
     }
-    return heatmap, treemap
+
+    # Europe-only view — aggregates the European entries
+    european_countries = {"United Kingdom", "Germany", "France", "Sweden",
+                          "Netherlands", "Switzerland"}
+    europe_rows = [(r["country"], float(r["private_ai_investment_usd_bn"]))
+                   for r in rows if r["country"] in european_countries]
+    europe_rows = sorted(europe_rows, key=lambda x: x[1])
+    europe_bars = {
+        "data": [
+            {
+                "type": "bar",
+                "orientation": "h",
+                "x": [v for _, v in europe_rows],
+                "y": [c for c, _ in europe_rows],
+                "marker": {"color": OCHRE, "line": {"color": OCHRE_DEEP, "width": 1}},
+                "hovertemplate": "<b>%{y}</b><br>$%{x:.1f}B<extra></extra>",
+            }
+        ],
+        "layout": {
+            **_layout("Europe only — private AI investment (2024)"),
+            "margin": {"l": 150, "r": 20, "t": 40, "b": 40},
+            "xaxis": {**TEMPLATE["xaxis"], "title": {"text": "USD bn"}},
+        },
+    }
+    return bars, europe_bars
 
 
 def all_charts():
-    nhs_a, nhs_b = nhs_charts()
-    dfe_a, dfe_b = dfe_charts()
-    nato_a, nato_b = nato_charts()
-    energy_a, energy_b = energy_charts()
+    vc_a, vc_b = european_vc_charts()
+    sec_a, sec_b = sector_charts()
+    def_a, def_b = defense_charts()
+    ct_a, ct_b = cleantech_charts()
     ai_a, ai_b = ai_charts()
     return {
-        "health": {
-            "title": "Health",
-            "eyebrow": "NHS England",
-            "summary": "Waiting lists, median weeks and 18-week breach volumes by specialty — the canonical canvas for elective-recovery analytics.",
-            "source": {"label": "NHS England Referral to Treatment", "url": "https://www.england.nhs.uk/statistics/statistical-work-areas/rtt-waiting-times/"},
-            "primary": nhs_a,
-            "secondary": nhs_b,
+        "european_vc": {
+            "title": "European VC",
+            "eyebrow": "Atomico · Dealroom",
+            "summary": "Venture capital deployed into European startups in 2024 — by country of headquarters and deal count. The shape of the market our portfolio operates in.",
+            "source": {
+                "label": "State of European Tech 2024 · Dealroom European venture review",
+                "url": "https://stateofeuropeantech.com/",
+            },
+            "primary": vc_a,
+            "secondary": vc_b,
         },
-        "education": {
-            "title": "Education",
-            "eyebrow": "UK Department for Education",
-            "summary": "Key Stage 4 Attainment 8 by region and free-school-meal status — the disadvantage gap in one frame.",
-            "source": {"label": "DfE Key Stage 4 performance", "url": "https://explore-education-statistics.service.gov.uk/find-statistics/key-stage-4-performance"},
-            "primary": dfe_a,
-            "secondary": dfe_b,
+        "sectors": {
+            "title": "Sector allocation",
+            "eyebrow": "European VC · 2024",
+            "summary": "Where European venture capital actually went in 2024. AI and climate absorbed half; defense and dual-use grew off a small base. These are the sectors we back.",
+            "source": {
+                "label": "State of European Tech 2024 · Dealroom",
+                "url": "https://stateofeuropeantech.com/",
+            },
+            "primary": sec_a,
+            "secondary": sec_b,
         },
         "defense": {
-            "title": "Defense",
-            "eyebrow": "NATO",
-            "summary": "European NATO defence spend, absolute and as share of GDP — against the 2% target line.",
-            "source": {"label": "NATO Defence Expenditure release", "url": "https://www.nato.int/cps/en/natohq/news_226465.htm"},
-            "primary": nato_a,
-            "secondary": nato_b,
+            "title": "Defense-tech",
+            "eyebrow": "Dealroom · NATO DIANA",
+            "summary": "European defense-tech venture funding, 2019–2025. Five years of a new category forming — the explicit re-armament decade now flowing into venture.",
+            "source": {
+                "label": "Dealroom defence + security · NATO DIANA",
+                "url": "https://dealroom.co/guides/defence",
+            },
+            "primary": def_a,
+            "secondary": def_b,
         },
-        "energy": {
-            "title": "Energy",
-            "eyebrow": "Ember · ENTSO-E",
-            "summary": "Electricity generation mix across Europe — the structural picture behind every energy-transition programme.",
-            "source": {"label": "Ember European Electricity Review", "url": "https://ember-energy.org/"},
-            "primary": energy_a,
-            "secondary": energy_b,
+        "cleantech": {
+            "title": "Cleantech",
+            "eyebrow": "Cleantech for Europe",
+            "summary": "European cleantech venture investment in 2024 — where the energy-transition capital lands once it hits startups.",
+            "source": {
+                "label": "Cleantech for Europe 2024 Investment Review · IEA",
+                "url": "https://www.cleantechforeurope.com/",
+            },
+            "primary": ct_a,
+            "secondary": ct_b,
         },
         "ai": {
             "title": "AI",
-            "eyebrow": "EC AI Watch · OECD AI · Eurostat",
-            "summary": "Composite public-sector AI readiness index across our target sectors and European geographies.",
-            "source": {"label": "EC AI Watch · OECD AI Observatory · Eurostat", "url": "https://ai-watch.ec.europa.eu/"},
+            "eyebrow": "Stanford AI Index 2025",
+            "summary": "Private AI investment by country in 2024 — the global shape of the sovereign-AI conversation, and Europe's position in it.",
+            "source": {
+                "label": "Stanford HAI · AI Index 2025",
+                "url": "https://aiindex.stanford.edu/",
+            },
             "primary": ai_a,
             "secondary": ai_b,
         },
     }
+
+
+def teaser_chart():
+    """Chart used on the home page signal teaser. Shows European VC by
+    country as a simple horizontal bar — legible at a glance, aligned
+    with the fund thesis."""
+    bars, _ = european_vc_charts()
+    bars = json.loads(json.dumps(bars))
+    bars["layout"]["title"]["text"] = "European VC capital deployed · 2024"
+    bars["layout"]["margin"] = {"l": 130, "r": 20, "t": 40, "b": 40}
+    return bars
 
 
 def as_json():

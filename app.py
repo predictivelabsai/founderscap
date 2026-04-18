@@ -125,11 +125,10 @@ def home():
             Div(
                 Div(
                     Eyebrow("Signal"),
-                    Heading(2, "We read the data our sectors run on — every day.", cls="mt-4 max-w-3xl"),
+                    Heading(2, "We read the market our portfolio operates in.", cls="mt-4 max-w-3xl"),
                     P(
-                        "A live view of European public data: NHS waiting lists, NATO ",
-                        SectorLink("defence"), " spend, ",
-                        SectorLink("energy"), " mix, AI readiness and education outcomes — the canvases the sovereign-AI thesis runs against.",
+                        "A live view of European venture: capital deployed by country, sector allocation, ",
+                        SectorLink("defense"), "-tech funding, cleantech breakdown and global AI investment — the canvases the fund thesis runs against.",
                         cls="mt-5 text-ink-muted text-lg max-w-2xl leading-relaxed",
                     ),
                     Button_("Open Signal", href="/signal", primary=True, cls="mt-8"),
@@ -180,10 +179,7 @@ def _sector_link(title, body, href):
 def _teaser_json():
     import json
     from content import signal as s
-    nhs, _ = s.nhs_charts()
-    nhs["layout"]["title"]["text"] = "NHS England waiting list · treemap by specialty"
-    nhs["layout"]["margin"] = {"l": 0, "r": 0, "t": 30, "b": 0}
-    return json.dumps(nhs)
+    return json.dumps(s.teaser_chart())
 
 
 # ---------- /thesis ----------
@@ -535,8 +531,8 @@ def signal():
         "/signal",
         Section_(
             Eyebrow("Signal"),
-            Heading(1, "European public data, visualised as fund-level context.", cls="mt-5 max-w-5xl"),
-            P("Five canvases across the sectors we invest in. Every figure is sourced from a named public dataset and cited below its chart.",
+            Heading(1, "European venture, visualised as fund-level context.", cls="mt-5 max-w-5xl"),
+            P("Five canvases on the market the portfolio lives in — European VC by country, sector allocation, defense-tech growth, cleantech breakdown and global AI investment. Every figure is sourced from a named public report and cited below its chart.",
               cls="mt-8 text-xl text-ink-muted max-w-3xl leading-relaxed"),
             cls="pt-24",
         ),
@@ -623,9 +619,10 @@ def contact():
             Div(
                 Div(
                     Eyebrow("Write to us"),
-                    Heading(2, CONTACT_EMAIL, cls="mt-4 break-all"),
+                    A(CONTACT_EMAIL, href=f"mailto:{CONTACT_EMAIL}",
+                      cls="mt-4 block text-xl md:text-2xl font-medium text-ink hover:text-accent break-all transition-colors"),
                     P("A short note on what you're building, where you're based and what round you are raising is enough to start a conversation.",
-                      cls="mt-5 text-ink-muted leading-relaxed"),
+                      cls="mt-4 text-ink-muted leading-relaxed text-sm"),
                     Div(
                         Button_("Email " + CONTACT_EMAIL, href=f"mailto:{CONTACT_EMAIL}", primary=True),
                         cls="mt-8",

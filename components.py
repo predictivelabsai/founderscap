@@ -13,7 +13,7 @@ from fasthtml.common import (
 
 SITE_NAME = "Founders Capital"
 SITE_TAGLINE = "European sovereign-AI capital, from founders who have built in Europe."
-CONTACT_EMAIL = "info@founderscap.eu"
+CONTACT_EMAIL = "pipeline@founderscap.co.uk"
 LINKEDIN_URL = "https://www.linkedin.com/company/founders-capital-ltd/"
 
 NAV_ITEMS = [
